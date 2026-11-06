@@ -1,0 +1,27 @@
+name: fix-author3
+on: push
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: rewrite piko author across history
+        run: |
+          git config user.name "xiaokaiwangcc"
+          git config user.email "xiaokaiwangcc@users.noreply.github.com"
+          FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --env-filter '
+          if [ "$GIT_AUTHOR_EMAIL" = "piko@users.noreply.github.com" ]; then
+            export GIT_AUTHOR_NAME="xiaokaiwangcc"
+            export GIT_AUTHOR_EMAIL="xiaokaiwangcc@users.noreply.github.com"
+          fi
+          if [ "$GIT_COMMITTER_EMAIL" = "piko@users.noreply.github.com" ]; then
+            export GIT_COMMITTER_NAME="xiaokaiwangcc"
+            export GIT_COMMITTER_EMAIL="xiaokaiwangcc@users.noreply.github.com"
+          fi
+          ' HEAD
+          git commit --amend -m "chore: 整理仓库文件 [skip ci]"
+          git push --force origin HEAD:main
