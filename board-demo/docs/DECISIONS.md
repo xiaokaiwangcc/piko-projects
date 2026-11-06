@@ -14,6 +14,6 @@
 ## D3（2026-11-04 17:22）API 改为 Pages 同源，不再依赖 workers.dev
 - 背景：`*.workers.dev` 在部分网络（实测：大管家所在网络）表现为 ERR_TIMED_OUT / ERR_CONNECTION_CLOSED，而 `board-demo-web.pages.dev` 同一网络可正常打开。跨域架构把可用性绑在了最脆弱的一跳上。
 - 决策：用 Pages Functions advanced mode 接管 `/api/*`，其余请求交给 `env.ASSETS`；前端 `VITE_API_BASE` 留空，走相对路径。接口实现仍只有一份 `worker/src/index.js`，`web/public/_worker.js` 由 `scripts/build-pages-worker.mjs` 生成。
-- 证据：`docs/evidence/api-checks-sameorigin.txt`；外部（IAD）请求 `/api/health` 得 200 + Date/CF-RAY，`/api/notes` 返回真实数据。
+- 证据：`docs/evidence/api-checks-sameorigin.txt`；外部请求 `/api/health` 得 200，`/api/notes` 返回真实数据。
 - 代价：Pages 项目必须配置 D1 绑定（preview + production）；`_worker.js` 是构建产物，改动接口后必须重新构建再上传。
 - 状态：已上线并验收通过（A2/A3/A4/A8/A11/A12）。

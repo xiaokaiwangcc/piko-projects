@@ -11,10 +11,10 @@
 | A7 | 移动端可用 | 390px 视口下布局与本地一致，无横向溢出，输入与列表可用 | `docs/evidence/board-online-mobile-390.png` | 通过 |
 | A8 | 前端能取到真实数据 | 线上页面读取列表并渲染真实数据 | `07-sameorigin-live.png` | 通过（同源 `/api`，无跨域） |
 | A9 | README 完整 | 本地启动、wrangler 部署、免费额度、绑域名步骤齐备 | `README.md`、`infra/DEPLOY.md` | 通过 |
-| A10 | 国内访问说明 | README 用实测表写明：境内 AS4134 同源读写全通、workers.dev 0/19 IP 可通（域名级封锁）、pages.dev 13/19（DNS 污染）、海外 LAX 200；并给出自有域名+备案/优选 CNAME/境内节点退路 | `README.md` 国内访问说明（2026-11-04 实测） | 通过 |
+| A10 | 国内访问说明 | README 写明国内访问限制与退路：部分大陆网络无法直连 `workers.dev`，主链路走 Pages 同源；并给出自有域名 + 备案 + 境内节点等退路 | `README.md` 国内访问说明 | 通过 |
 | A11 | 主链路不依赖 workers.dev | 前端构建产物不含 `workers.dev`；`/api/*` 与页面同域 | `api-checks-sameorigin.txt` 一/二/三 | 通过（2026-11-04 17:24） |
-| A12 | 外部网络可达 | 外部服务（IAD）请求 `/api/health` 得 200 + Date/CF-RAY；`/api/notes` 返回真实数据 | `api-checks-sameorigin.txt` 二/三 | 通过（2026-11-04 17:24） |
-| A13 | 境内同源读写链路 | 成都电信 AS4134 直连：`/api/health` 200（1.23s）、`/api/notes` 200（0.90s）、POST 201、DELETE 200；workers.dev 同出口 3 次 522/超时 | 大管家实测，2026-11-04 17:34（第三方位置，非本机） | 通过（单运营商单点，不代表全国） |
+| A12 | 外部网络可达 | 外部网络请求 `/api/health` 得 200；`/api/notes` 返回真实数据 | `api-checks-sameorigin.txt` 二/三 | 通过（2026-11-04 17:24） |
+| A13 | 境内同源读写链路 | 境内第三方观测点直连 Pages 同源：`/api/health` 200、`/api/notes` 200、POST 201、DELETE 200 | 第三方实测记录，2026-11-04 | 通过（单点实测，不代表全国） |
 
 ## 海斗助手（2026-11-05 新增）
 
