@@ -32,7 +32,7 @@ api.codetabs.com 与 api.allorigins.win 返回的 522 页面自身标注：
   "Cloudflare / api.codetabs.com / Host: Error / 522 Connection timed out"
   Ray ID 与 Host 都是代理服务自己的，不是 board-demo-api 的响应。
   即：之前用这两个代理“交叉验证后端 522”，实际测到的是代理服务自身故障，结论不成立。
-  workers.dev 在部分网络（含大管家所在网络）确实不可达，这是链路问题；改同源后主链路不再经过 workers.dev。
+  workers.dev 在部分网络确实不可达，这是链路问题；改同源后主链路不再经过 workers.dev。
 
 五、UI 全流程（浏览器实机，https://board-demo-web.pages.dev/）
   新增“同源接口验收 1723” → 提示“留言已发布”，计数 1→2
