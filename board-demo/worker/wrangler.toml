@@ -1,0 +1,12 @@
+name = "board-demo-api"
+main = "src/index.js"
+compatibility_date = "2026-11-04"
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "board-demo-db"
+database_id = "69d83f4d-c7ba-4912-94d6-beb5d22ef915"
+migrations_dir = "migrations"

@@ -1,0 +1,22 @@
+海斗 MCP 线上验证（2026-11-05 19:06 UTC+8）
+观测点：本机 Chrome，页面上下文 https://board-demo-web.pages.dev/haidou 内 fetch 同源 /mcp
+
+1) tools/call search_champion {query:"压缩"}
+POST /mcp → HTTP 200
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"> 数据版本 16.21 · 统计日期 2026-11-02 · 非官方统计，仅供参考
+
+搜索「压缩」的结果：
+
+- **亚索**（疾风剑豪 · 战士/刺客）
+  胜率 58.5% · 登场 11.6% · T1（id=157）
+  常见叫法：压缩、快乐风男、风男、剑豪
+  匹配原因：俗称「压缩」"}]}}
+
+2) tools/call get_build {champion:"ez"}
+POST /mcp → HTTP 200
+返回 伊泽瑞尔（探险家，射手/法师）胜率 46.7%、登场 11.7%、T4，含攻击套路与核心装备。
+
+3) GET /api/health → HTTP 200 {"ok":true}
+
+4) 页面检查：document.body.innerText 中不含 "LOLDAA" / "数据来源"；
+   /data/haidou.json 的 meta 仅有 gamePatch / dataDate / generatedAt / aliasUpdatedAt。

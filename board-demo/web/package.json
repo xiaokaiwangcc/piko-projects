@@ -1,0 +1,25 @@
+{
+  "name": "board-demo-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --configLoader native",
+    "build": "node ../scripts/build-pages-worker.mjs && tsc --noEmit && vite build --configLoader native",
+    "preview": "vite preview --configLoader native",
+    "mock": "node mock-server.mjs",
+    "test": "node --test mock-server.test.mjs api.test.ts",
+    "data:haidou": "node ../scripts/build-haidou-data.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "@vitejs/plugin-react": "^6.0.4",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.5"
+  }
+}

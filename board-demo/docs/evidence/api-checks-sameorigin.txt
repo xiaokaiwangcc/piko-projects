@@ -1,0 +1,81 @@
+同源 API 验收记录（2026-11-04 17:22–17:26 +08）
+目标：前端与 /api/* 同域，验证不再依赖 *.workers.dev
+
+一、浏览器内自测（页面 https://board-demo-web.pages.dev/，fetch 同源相对路径）
+GET /api/health
+  status: 200
+  date: Wed, 04 Nov 2026 09:22:31 GMT
+  content-type: application/json; charset=utf-8
+  cf-ray: a5528e032e8da8ca-LAX
+  body: {"ok":true}
+
+GET /api/notes
+  status: 200
+  body: {"items":[{"id":3,"content":"6666","created_at":"2026-11-04T08:58:14.775Z"}]}
+
+二、外部独立复核 A：api.hackertarget.com/httpheaders（出口 IAD）
+请求 https://board-demo-web.pages.dev/api/health
+  HTTP/1.1 200 OK
+  Date: Wed, 04 Nov 2026 09:24:52 GMT
+  Content-Type: application/json; charset=utf-8
+  Content-Length: 11
+  Server: cloudflare
+  CF-RAY: a5529173c8b19b21-IAD
+
+三、外部独立复核 B：r.jina.ai 取 /api/notes 正文
+  {"items":[{"id":5,"content":"耍起！","created_at":"2026-11-04T09:25:30.545Z"},
+            {"id":3,"content":"6666","created_at":"2026-11-04T08:58:14.775Z"}]}
+  → id=5 是 17:25 由另一位使用者从线上页面新增的真实数据，说明接口对第三方可写、数据真落 D1。
+
+四、关于此前的 522（重要更正）
+api.codetabs.com 与 api.allorigins.win 返回的 522 页面自身标注：
+  "Cloudflare / api.codetabs.com / Host: Error / 522 Connection timed out"
+  Ray ID 与 Host 都是代理服务自己的，不是 board-demo-api 的响应。
+  即：之前用这两个代理“交叉验证后端 522”，实际测到的是代理服务自身故障，结论不成立。
+  workers.dev 在部分网络（含大管家所在网络）确实不可达，这是链路问题；改同源后主链路不再经过 workers.dev。
+
+五、UI 全流程（浏览器实机，https://board-demo-web.pages.dev/）
+  新增“同源接口验收 1723” → 提示“留言已发布”，计数 1→2
+  刷新页面 → 仍在，计数 2（真落库）
+  删除该条 → 提示“留言已删除”，计数 2→1
+  再刷新 → 仍为 1 条（id=3「6666」保留，未误删既有数据）
+
+六、部署记录（Cloudflare API 读取）
+  新生产部署 e9760069-98c5-449c-a0ff-1d6189ef304c（2026-11-04T09:22:11Z，success）
+  可回滚目标 6b30c52b-9c0b-4982-b954-9cca78719ed4（同源改造前的上一版）
+  Pages 项目 D1 绑定：DB → 69d83f4d-c7ba-4912-94d6-beb5d22ef915（preview 与 production 均已设置）
+
+七、复现方式（任意外部网络）
+  curl -i https://board-demo-web.pages.dev/api/health
+  curl -s https://board-demo-web.pages.dev/api/notes
+
+八、发布方式说明
+  控制台上传时选了“预览”，但成功页显示部署到 board-demo-web.pages.dev，实际落到了 production。
+  已核对部署列表：e9760069 为 production/success，旧版 6b30c52b 仍在，可回滚。
+  下次若要严格先预览，用 wrangler pages deploy --branch=<name>，或改完后再点“生产”。
+
+九、17:30 复检（来自本机 Chrome，出口 LAX）
+  fetch https://board-demo-web.pages.dev/api/health
+    HTTP 200  Date: Wed, 04 Nov 2026 09:29:55 GMT  CF-RAY: a55298d9eb68a8ca-LAX
+    {"ok":true}
+  fetch https://board-demo-web.pages.dev/api/notes
+    HTTP 200  Date: Wed, 04 Nov 2026 09:30:00 GMT  CF-RAY: a55298f91b48a8ca-LAX
+    items 3 条（id=6「CN-link-test-1729」17:29 新增、id=5「耍起！」17:25、id=3「6666」16:58）
+  说明：id=6 是本轮验收时由外部网络新增的测试数据，同为真实落库证据；如需干净演示可自行删除。
+
+十、境内直连复测（2026-11-04 17:34，来源：大管家，非本机；成都电信 AS4134，出口 171.217.93.100）
+  GET  /api/health      → 200 {"ok":true}            1.232s（普通直连：未走代理/未优选 IP/未改 DNS）
+  GET  /api/notes       → 200 真实 D1 数据            0.903s
+  POST /api/notes       → 201 新增 id=6 落库
+  DELETE /api/notes/6   → 200 {"ok":true}            （测试数据已删除）
+  → 境内直连读写全链路可用，主链路不依赖 workers.dev 的价值得到证实。
+
+  同一出口 19 个 Cloudflare 边缘 IP 探测：
+    *.pages.dev   13/19 可通，0.8–2.9s
+    *.workers.dev  0/19 可通，0.3s 内 RST（域名级封锁，换 IP 无效）
+
+十一、17:35 复核（本机 Chrome，出口 LAX）
+  GET /api/notes → 200，Date: Wed, 04 Nov 2026 09:35:06 GMT，CF-RAY: a552a072bc94a8ca-LAX
+  当前库内 2 条：id=5「耍起！」、id=3「6666」；id=6 已由创建者删除，无残留。
+
+  说明：以上为 2026-11-04 单点单运营商实测，不代表全国可用；正式对国内提供服务仍需自有域名 + 备案，并按 README 三网实测。

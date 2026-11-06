@@ -1,0 +1,14 @@
+{
+  "name": "board-demo-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "board-demo 后端：Cloudflare Worker + D1，零运行时依赖",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test test/*.test.js",
+    "db:migrate:local": "wrangler d1 migrations apply board-demo-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply board-demo-db --remote"
+  }
+}

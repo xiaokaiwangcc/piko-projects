@@ -1,0 +1,33 @@
+海斗助手线上检查
+时间：2026-11-05 17:19–17:22（UTC+8）
+观测位置：本机 Chrome（已登录环境），直接访问 board-demo-web.pages.dev
+方式：页面内同源 fetch（不是 localhost，不是 workers.dev）
+
+1. GET https://board-demo-web.pages.dev/haidou.html
+   → 自动跳转 https://board-demo-web.pages.dev/haidou
+   → 200 text/html
+
+2. GET https://board-demo-web.pages.dev/haidou
+   → 200 text/html
+   → 首页正常渲染；输入「亚索」→ 候选 → #/c/157 详情；胜率榜 173 位英雄
+
+3. GET https://board-demo-web.pages.dev/data/haidou.json
+   → 200 application/json
+   → 本地构建产物大小 460,734 bytes；173 英雄 / 155 装备名 / 166 强化说明
+
+4. GET https://board-demo-web.pages.dev/api/health
+   → 200 {"ok":true}（原有留言板接口未受影响）
+
+5. 移动端：390px / 320px iframe 视口
+   → scrollWidth == clientWidth（390:375/375，320:305/305），无横向溢出
+
+证据截图：
+- docs/evidence/08-haidou-home.png
+- docs/evidence/09-haidou-detail.png
+- docs/evidence/10-haidou-rank.png
+- docs/evidence/11-haidou-mobile-390.png
+- docs/evidence/12-haidou-augments.png
+
+部署记录：
+- Pages production deployment 3447ef23-2179-4446-b649-99a5cc78ea9c
+- 创建时间 2026-11-05T09:17:42Z（17:17 UTC+8），deploy success

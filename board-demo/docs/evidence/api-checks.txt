@@ -1,0 +1,17 @@
+# 线上 API 实测（2026-11-04，Chrome 页面内同源/跨域 fetch，等价 curl）
+
+GET https://board-demo-api.xiaokaixin12.workers.dev/api/health
+-> 200 {"ok":true}
+
+GET https://board-demo-api.xiaokaixin12.workers.dev/api/notes
+-> 200 {"items":[]}
+
+POST /api/notes  body={"content":"   "}
+-> 400 {"error":{"code":"EMPTY_CONTENT","message":"留言内容不能为空"}}
+
+POST /api/notes  body={"content":"xxx...(201 chars)"}
+-> 400 {"error":{"code":"TOO_LONG","message":"留言内容不能超过 200 字"}}
+
+# 页面真实操作（https://board-demo-web.pages.dev/）
+# 新增「验收测试留言 UAT-2026-11-04」-> 列表 1 条 -> 刷新仍在
+# 删除 -> 列表 0 条 -> 刷新仍为 0 条

@@ -1,0 +1,12 @@
+node_modules
+dist/
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+node_modules
+# 由 scripts/build-pages-worker.mjs 生成
+web/public/_worker.js
