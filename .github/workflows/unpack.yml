@@ -1,0 +1,20 @@
+name: unpack
+on: push
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: unpack
+        run: |
+          test -f piko-projects.zip || exit 0
+          unzip -q piko-projects.zip -d /tmp/x
+          cp -R /tmp/x/piko-projects/. .
+          rm -f piko-projects.zip .github/workflows/unpack.yml
+          git config user.name piko-bot
+          git config user.email piko@users.noreply.github.com
+          git add -A
+          git commit -m "feat: 展开项目文件"
+          git push
