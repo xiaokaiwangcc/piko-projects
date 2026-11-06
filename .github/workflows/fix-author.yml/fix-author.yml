@@ -1,0 +1,19 @@
+name: fix-author
+on: push
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: rewrite last commit author
+        run: |
+          git config user.name "xiaokaiwangcc"
+          git config user.email "xiaokaiwangcc@users.noreply.github.com"
+          git reset --soft HEAD~1
+          git restore --staged .github/workflows/fix-author.yml
+          git commit --amend --no-edit --reset-author
+          git push --force origin HEAD:main
