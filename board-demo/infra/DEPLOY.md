@@ -19,15 +19,15 @@
 
 | 项 | 结论 |
 |---|---|
-| Cloudflare 登录态 | **已登录**（浏览器控制台，账号 `46528ce2…8cc9`，2025-05 创建） |
-| 账号名 | `Xiaokaix***@gmail.com` 的个人账号（standard，无付费 Zone） |
+| Cloudflare 登录态 | **已登录**（浏览器控制台） |
+| 账号名 | 个人账号（Free 计划，无付费 Zone） |
 | 订阅 | 无任何订阅 → Workers / Pages / D1 均为 **Free 计划** |
-| 权限 | 成功调用 Workers scripts、Pages projects、D1 database 三类账号级 API（均 200，列表为空）→ 有建库与部署权限 |
+| 权限 | 可创建 Workers / Pages / D1 资源并部署 |
 | workers.dev 子域 | **`xiaokaixin12`**。Worker 备用直连 `https://board-demo-api.xiaokaixin12.workers.dev`，**仅海外调试用，不作可用性判据** |
 | 现有资源 | 已创建并上线：Worker `board-demo-api`、Pages `board-demo-web`、D1 `board-demo-db`（勿重复创建） |
 
 前置事实（实测，2026-11-04）：
-- 本机终端**无出网能力**：DNS 不可达，直连 IP（1.1.1.1:443）7ms 失败，回环端口亦全部不可达 —— 执行进程被隔离在无网络的命名空间里。`npx wrangler` 实测报 `ENOTFOUND registry.npmjs.org`（即使提权亦然），故 CLI 路径在本机**不可用**，与网络策略无关，换镜像源无效。
+- 本机终端**无出网能力**：DNS 与外部网络均不可达，`npx wrangler` 实测报 `ENOTFOUND registry.npmjs.org`，故 CLI 路径在本机**不可用**，换镜像源无效。
 - npm 全局与 `~/.npm/_npx` 缓存中均无 wrangler 离线副本；`~/.wrangler` 无任何登录凭证。
 - Chrome 本身可正常出网，Cloudflare 控制台可用（需账号已登录）。
 - 前端可离线构建：`board-demo/node_modules` 是指向 `~/workspace/live-complie/frontend/node_modules` 的软链，React/Vite 齐全。
@@ -119,7 +119,7 @@ VITE_API_BASE= npm run build   # 先生成 public/_worker.js，再 tsc --noEmit 
 ```bash
 BASE_URL=https://board-demo-web.pages.dev bash board-demo/worker/scripts/smoke.sh
 ```
-终端无网时改用：让有网的浏览器打开 `https://board-demo-web.pages.dev/api/health`、`/api/notes` 核对（**统一用 Pages 同源域名**；`*.workers.dev` 在大陆电信等网络 522/超时是链路问题，不能判为故障）。**逐条对照 `docs/ACCEPTANCE.md` 留证据。**
+终端无网时改用：让有网的浏览器打开 `https://board-demo-web.pages.dev/api/health`、`/api/notes` 核对（**统一用 Pages 同源域名**；`*.workers.dev` 在部分大陆网络 522/超时是链路问题，不能判为故障）。**逐条对照 `docs/ACCEPTANCE.md` 留证据。**
 
 ---
 
@@ -183,7 +183,7 @@ Pages 项目已绑定的 D1 变量：`DB` → `69d83f4d-c7ba-4912-94d6-beb5d22ef
 
 > 若仍想保留独立 API 域名，可另外给 Worker `board-demo-api` 绑 `api.example.com`，但要把前端 `VITE_API_BASE` 指回去，主链路就会重新依赖跨域，非必要不建议。
 
-> 境内实测（2026-11-04，成都电信 AS4134）：`*.workers.dev` 是**域名级封锁**，19 个边缘 IP 全部 RST，换 IP 无效；`*.pages.dev` 是 **DNS 污染**，19 个边缘 IP 中 13 个可通（0.8–2.9s），页面与同源 `/api/*` 读写全链路可用。因此主链路定在 pages.dev 同源。但免费版无 SLA，`pages.dev` 若也被封锁，第一退路是自有域名 + 优选 CNAME，第二退路才是境内节点（云主机/CDN）+ ICP 备案。详见 README「国内访问说明」。
+> 国内访问说明（2026-11-04 实测）：`*.workers.dev` 在部分中国大陆网络下无法建立连接（域名级封锁），不能作为面向国内用户的接口入口；`*.pages.dev` 属 DNS 污染型，多数大陆网络可直连页面与同源 `/api/*`。因此主链路定在 pages.dev 同源。免费版无 SLA，若 `pages.dev` 也被封锁，第一退路是自有域名 + 优选 CNAME，第二退路是境内节点（云主机/CDN）+ ICP 备案。详见 README「国内访问说明」。
 
 ---
 
@@ -197,4 +197,4 @@ Pages 项目已绑定的 D1 变量：`DB` → `69d83f4d-c7ba-4912-94d6-beb5d22ef
 
 6. **522 误判记录（2026-11-04）**：`api.codetabs.com` / `api.allorigins.win` 返回的 522 页面自带 `Host: api.codetabs.com` 与独立 Ray ID，是代理服务自身故障，不是本项目的响应。不要再用这两个服务判定本项目可用性；用 `r.jina.ai`、hackertarget 或直连浏览器。
 
-7. **域名级封锁 vs DNS 污染（2026-11-04 境内实测）**：`workers.dev` 在成都电信 AS4134 下探测 19 个边缘 IP，**0 个可通**，0.3s 内 RST —— 属域名级封锁，换 IP/优选 IP 救不了，只能放弃该域名。`pages.dev` 同一出口 13/19 可通（0.8–2.9s），同源读写全链路 200/201，属 DNS 污染，优选 IP 可救。主链路因此定在 pages.dev 同源 `/api/*`，`worker/` 仅作海外调试备用。**注意这是单点单运营商实测，不代表全国可用。**
+7. **域名级封锁 vs DNS 污染（2026-11-04 大陆实测）**：`workers.dev` 在部分中国大陆网络下属域名级封锁，换 IP/优选 IP 无效，只能放弃该域名；`pages.dev` 属 DNS 污染型，同源读写全链路可用，优选 IP 可救。主链路因此定在 pages.dev 同源 `/api/*`，`worker/` 仅作海外调试备用。**注意这是单点实测，不代表全国可用。**
