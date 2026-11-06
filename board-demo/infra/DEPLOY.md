@@ -27,10 +27,10 @@
 | 现有资源 | 已创建并上线：Worker `board-demo-api`、Pages `board-demo-web`、D1 `board-demo-db`（勿重复创建） |
 
 前置事实（实测，2026-11-04）：
-- 本机终端**无出网能力**：DNS 与外部网络均不可达，`npx wrangler` 实测报 `ENOTFOUND registry.npmjs.org`，故 CLI 路径在本机**不可用**，换镜像源无效。
+- 若终端无法安装 npm 依赖（`npx wrangler` 报 `ENOTFOUND`），CLI 路径不可用，换镜像源通常无效。
 - npm 全局与 `~/.npm/_npx` 缓存中均无 wrangler 离线副本；`~/.wrangler` 无任何登录凭证。
-- Chrome 本身可正常出网，Cloudflare 控制台可用（需账号已登录）。
-- 前端可离线构建：`board-demo/node_modules` 是指向 `~/workspace/live-complie/frontend/node_modules` 的软链，React/Vite 齐全。
+- Cloudflare 控制台可用（需账号已登录）。
+- 前端依赖已就绪（复用现有 `node_modules`），React/Vite 齐全，可离线构建。
 - `node/npm/npx` 不在默认 PATH 里，真实位置是 `/opt/homebrew/bin/`（`/usr/local/bin` 下的同名项已失效）。所有构建命令前面加 `PATH=/opt/homebrew/bin:$PATH`。
 - 已验证：`VITE_API_BASE=... npx vite build`（89ms）与 `npx tsc --noEmit`（无错误）均可在无网状态跑通，产物中能检出 API 域名。
 
@@ -189,12 +189,10 @@ Pages 项目已绑定的 D1 变量：`DB` → `69d83f4d-c7ba-4912-94d6-beb5d22ef
 
 ## 已知风险与待办
 
-1. **前端必须按同源构建**：`VITE_API_BASE` 留空，产物里 `grep workers.dev` 应为 0、`_worker.js` 必须存在。若误带旧 `VITE_API_BASE`，前端会重新依赖 `workers.dev`，在部分网络（已验证：大管家所在网络）不可达。
+1. **前端必须按同源构建**：`VITE_API_BASE` 留空，产物里 `grep workers.dev` 应为 0、`_worker.js` 必须存在。若误带旧 `VITE_API_BASE`，前端会重新依赖 `workers.dev`，在部分网络不可达。
 2. 控制台手工路径不可复现、无审计记录；上线后尽快切回 A 路径（wrangler CLI）。
 3. CORS 目前是 `Access-Control-Allow-Origin: *`，Demo 可接受，绑自有域名后建议收敛到具体来源。
 4. 线上日志**确实没开**：实测 `logpush=false` 且无 observability 配置（`wrangler.toml` 里的 `observability.enabled` 未生效）。排障前先在 Worker Settings 手工开启，否则线上无日志可查。
-5. 本次为绕过终端断网，临时在控制台创建过一个 API Token 用于调用部署接口，**已删除**（`/api/v4/user/tokens` 列表现为空）。如后续复现，用完必须删。
+5. 本次为完成部署，临时在控制台创建过一个 API Token 用于调用部署接口，**已删除**（`/api/v4/user/tokens` 列表现为空）。如后续复现，用完必须删。
 
-6. **522 误判记录（2026-11-04）**：`api.codetabs.com` / `api.allorigins.win` 返回的 522 页面自带 `Host: api.codetabs.com` 与独立 Ray ID，是代理服务自身故障，不是本项目的响应。不要再用这两个服务判定本项目可用性；用 `r.jina.ai`、hackertarget 或直连浏览器。
-
-7. **域名级封锁 vs DNS 污染（2026-11-04 大陆实测）**：`workers.dev` 在部分中国大陆网络下属域名级封锁，换 IP/优选 IP 无效，只能放弃该域名；`pages.dev` 属 DNS 污染型，同源读写全链路可用，优选 IP 可救。主链路因此定在 pages.dev 同源 `/api/*`，`worker/` 仅作海外调试备用。**注意这是单点实测，不代表全国可用。**
+7. **域名级封锁 vs DNS 污染（2026-11-04 实测）**：`workers.dev` 在部分中国大陆网络下属域名级封锁，换 IP/优选 IP 无效，只能放弃该域名；`pages.dev` 属 DNS 污染型，同源读写全链路可用，优选 IP 可救。主链路因此定在 pages.dev 同源 `/api/*`，`worker/` 仅作海外调试备用。**注意这是单点实测，不代表全国可用。**
