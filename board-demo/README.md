@@ -22,7 +22,7 @@ infra/   部署脚本、线上验证、回滚说明（负责人：运维小博�
 docs/    API 契约、验收清单（负责人：全能小源）
 ```
 
-> 与最初选型的偏差：原计划用 Hono，但本机终端无外网、无法安装依赖，改为**零依赖原生 Worker**（约 140 行，可直接粘贴进控制台）。路由、校验、CORS 行为与 `docs/API-CONTRACT.md` 一致，后续可平滑换 Hono。决策记录见 `docs/DECISIONS.md`。
+> 与最初选型的偏差：原计划用 Hono，为减少部署依赖，最终改为**零依赖原生 Worker**（约 140 行，可直接粘贴进控制台）。路由、校验、CORS 行为与 `docs/API-CONTRACT.md` 一致，后续可平滑换 Hono。决策记录见 `docs/DECISIONS.md`。
 
 ## 接口
 见 `docs/API-CONTRACT.md`。前端默认请求同源相对路径 `/api/*`（`VITE_API_BASE` 留空）；本地联调时可指向 mock 或 Worker。
@@ -147,7 +147,7 @@ npx wrangler pages deploy dist --project-name=board-demo-web
 
 Pages 项目需要在 Settings → Functions → D1 bindings 里绑定 `DB` → `board-demo-db`（preview 与 production 各一份）。绑定缺失时 `/api/*` 会返回 500。
 
-本机终端无出网能力时，走控制台手工路径：D1 建库 → 控制台执行 `worker/migrations/0001_init.sql` → Pages 绑定 `DB` → 上传 `web/dist` zip（zip 根目录就是 `index.html` / `assets/` / `_worker.js`）。详见 `infra/DEPLOY.md` B 节。
+若无法使用 CLI，走控制台手工路径：D1 建库 → 控制台执行 `worker/migrations/0001_init.sql` → Pages 绑定 `DB` → 上传 `web/dist` zip（zip 根目录就是 `index.html` / `assets/` / `_worker.js`）。详见 `infra/DEPLOY.md` B 节。
 
 **线上实例（2026-11-04）**
 - 线上入口（前端 + API 同源）：https://board-demo-web.pages.dev
@@ -195,7 +195,7 @@ Pages 项目需要在 Settings → Functions → D1 bindings 里绑定 `DB` → 
 
 - 在部分中国大陆网络下，`*.workers.dev` 无法建立连接（域名级），因此主链路使用 Pages 同源 `/api/*`，`worker/` 仅作海外调试备用。
 - `*.pages.dev` 在多数大陆网络可直连，但属 DNS 污染型，不保证长期稳定。
-- 面向国内用户正式提供服务，建议自有域名 + ICP 备案 + 境内节点；上线前在电信、联通、移动三条线路各测一次页面与 `/api/health`。
+- 面向国内用户正式提供服务，建议自有域名 + ICP 备案 + 境内节点；上线前在多家运营商线路各测一次页面与 `/api/health`。
 - 对外统一表述为「当前可用，非承诺」：Cloudflare 免费版对大陆无 SLA。
 
 ## 分支与协作约定
