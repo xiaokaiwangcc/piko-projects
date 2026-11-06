@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 契约冒烟：BASE_URL=https://board-demo-web.pages.dev bash scripts/smoke.sh
-# 注意：判据一律用 Pages 同源域名；*.workers.dev 在部分网络（大陆电信等）不可达，不能用来判定可用性。
+# 注意：判据一律用 Pages 同源域名；*.workers.dev 在部分大陆网络不可达，不能用来判定可用性。
 set -uo pipefail
 BASE_URL="${BASE_URL:?请设置 BASE_URL，例如 https://board-demo-web.pages.dev}"
 PASS=0
