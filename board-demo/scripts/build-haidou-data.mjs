@@ -21,13 +21,34 @@ const ITEM_JSON = process.env.ITEM_JSON || '/private/tmp/lol/ddragon-item-16.21.
 const SPELL_JSON = process.env.SPELL_JSON || '/private/tmp/lol/ddragon-summoner-16.21.1.json';
 const OUT = process.env.OUT || path.resolve('web/public/data/haidou.json');
 
+// LOLDAA 装备池里出现、但 Data Dragon 16.21 中文包里查不到的条目（人工核对后补名）
+const EXTRA_ITEM_NAMES = { 3086: '狂热' };
+
 const read = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
-const champs = read(RAW_CHAMPS);
-const catalog = new Map(read(RAW_CATALOG).list.map((x) => [x.id, x]));
-const itemData = read(ITEM_JSON).data;
-const spellData = read(SPELL_JSON).data;
-const spells = {};
-for (const v of Object.values(spellData)) spells[v.key] = v.name;
+
+// RAW_BUNDLE：一次抓下来的 {index, files{...}} 合集（champions/*.json + catalog.json），
+// 免去 173 次单独抓取。PREV_DATA：上一版 haidou.json，用于复用装备/召唤师技能中文名
+// （Data Dragon 的 JSON 无法在离线环境重新下载）。
+const BUNDLE = process.env.RAW_BUNDLE;
+const PREV = process.env.PREV_DATA;
+let champs, catalog, itemData = null, spells = {}, prevItems = null;
+if (BUNDLE) {
+  const bundle = read(BUNDLE);
+  champs = Object.entries(bundle.files)
+    .filter(([k]) => k.startsWith('champions/'))
+    .map(([, v]) => v);
+  catalog = new Map(bundle.files['catalog.json'].list.map((x) => [x.id, x]));
+  const prev = PREV ? read(PREV) : null;
+  if (!prev) throw new Error('RAW_BUNDLE 模式需要 PREV_DATA 提供装备/技能中文名');
+  spells = prev.spells || {};
+  prevItems = prev.items || {};
+} else {
+  champs = read(RAW_CHAMPS);
+  catalog = new Map(read(RAW_CATALOG).list.map((x) => [x.id, x]));
+  itemData = read(ITEM_JSON).data;
+  const spellData = read(SPELL_JSON).data;
+  for (const v of Object.values(spellData)) spells[v.key] = v.name;
+}
 
 const buildLabel = {
   ap: '法系', tank: '坦克', crit: '暴击', bruiser: '战士',
@@ -76,8 +97,10 @@ const champions = champs.map((c) => {
     const spell = topBy(b.spells || [], (s) => s.pickRate, 1)[0];
     for (const id of [...b.items, ...b.starters.flat(), ...(boots ? boots.ids : []), ...later.flatMap((e) => e.ids)]) {
       if (!itemsOut.has(id)) {
-        const it = itemData[id];
-        itemsOut.set(id, { name: it ? it.name : String(id) });
+        const it = itemData ? itemData[id] : null;
+        const prevIt = prevItems ? prevItems[id] : null;
+        const name = it ? it.name : (prevIt ? prevIt.name : (EXTRA_ITEM_NAMES[id] || String(id)));
+        itemsOut.set(id, { name });
       }
     }
     return {
